@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="yang.chen.blog.dao.CommentDao">
+	<resultMap type="Comment" id="CommentResult">
+		<result property="id" column="id"></result>
+		<result property="userIp" column="userip"></result>
+		<result property="content" column="content"></result>
+		<result property="commentDate" column="commentdate"></result>
+		<result property="state" column="state"></result>
+		<!-- 外键 -->
+		<association property="blog" column="blogid" select="yang.chen.blog.dao.BlogDao.getBlogById"></association>
+	</resultMap>
+	<!-- 新增一条评论 -->
+	<insert id="add" useGeneratedKeys="true" keyProperty="id" parameterType="Comment">
+		insert into t_comment values(null,#{userIp},#{blog.id},#{content},now(),0)
+	</insert>
+	<!-- 更新一条评论 -->
+	<update id="update"  parameterType="Comment">
+		update t_comment
+		<set>
+			<!--<if test="userip!=null and userip!=''">
+				userip=#{userIp},
+			</if>
+			<if test="content!=null and content!=''">
+				content=#{content},
+			</if>-->
+			<if test="state!=null">
+				state=#{state},
+			</if>
+		</set>
+		where id=#{id}
+	</update>
+	<!-- 删除一条评论 -->
+	<delete id="delete" parameterType="Integer">
+		delete from t_comment where id=#{id}
+	</delete>
+	<!-- 根据博客Id删除评论 -->
+	<delete id="deleteCommentByBlogId" parameterType="Integer">
+		delete from t_comment where blogid=#{blog.id}
+	</delete>
+	<!-- 查询所有评论 -->
+	<select id="getComments" parameterType="Map" resultMap="CommentResult">
+		select * from t_comment 
+		<where>
+			<if test="blogid!=null">
+				and blogid=#{blogId}
+			</if>
+			<if test="state!=null">
+				and state=#{state}
+			</if>
+		</where>
+		order by commentDate desc 
+		<if test="start!=null and size!=null">
+			limit #{start},#{size}
+		</if>
+	</select>
+	<!-- 查询所有评论数量 -->
+	<select id="getCommentsCount" parameterType="Map" resultType="Long">
+		select count(*) from t_comment
+		<where>
+			<if test="userip!=null and userip!=''">
+				and userip=#{userIp}
+			</if>
+			<if test="state!=null and state!=''">
+				and state=#{state}
+			</if>
+			<if test="commentdate!=null and commentdate!=''">
+				and date_format(commentDate,'%Y年%m月%d日')=#{commentDate}
+			</if>
+		</where>
+	</select>
+</mapper>
